@@ -10,4 +10,5 @@ def page_not_found(e):
 # Render HTML
 @frontend.route('/')
 def index():
-    return render_template('index.html')
+    #return render_template('index.html')
+    return render_template('map2.html')

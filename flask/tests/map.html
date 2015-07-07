@@ -9,29 +9,26 @@
     </script>
     <script type="text/javascript">
       function initialize() {
+        var myLatlng = new google.maps.LatLng(-25.363882,131.044922);
         var mapOptions = {
-          center: { lat: 56.1572, lng: 10.2107},
-          zoom: 8
-        };
-        var map = new google.maps.Map(document.getElementById('map-canvas'),
-            mapOptions);
+          zoom: 4,
+          center: myLatlng
+        }
+        var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-        //TODO: saving and retrieving locations
-        google.maps.event.addListener(map, 'click', function(evt) {
-            console.log("clicked on map!");
+        var marker = new google.maps.Marker({
+          position: myLatlng,
+          map: map,
+          title: 'Hello World!'
         });
-        asdfasd
-        console.log("blogai");
       }
-      google.maps.event.addDomListener(window, 'load', initialize);
-      
-      
 
+    google.maps.event.addDomListener(window, 'load', initialize);
 
     </script>
   </head>
   <body>
-
 <div id="map-canvas"></div>
   </body>
 </html>
+

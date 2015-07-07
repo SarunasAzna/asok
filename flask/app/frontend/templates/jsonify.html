@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html, body, #map-canvas { height: 500px; width: 500px; margin: 0; padding: 0;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkjIj6vsgmZGDvqBTKuNnxwj1PfZ_dR2M">
+    </script>
+    <script type="text/javascript"
+      src="https://code.jquery.com/jquery-2.1.4.min.js">
+    </script>
+
+    
+    <script type="text/javascript">
+
+      function initialize() {
+        var mapOptions = {
+          center: { lat: 56.1572, lng: 10.2107},
+          zoom: 8
+        };
+        var map = new google.maps.Map(document.getElementById('map-canvas'),
+            mapOptions);
+
+        //TODO: saving and retrieving locations
+        google.maps.event.addListener(map, 'click', function(evt) {
+            console.log("clicked on map!");
+        
+        var latLng = new google.maps.LatLng(54.1572, 10.2107);
+        addMarker(latLng);
+
+        var locs = $.ajax({
+        dataType: "json",
+        url: "/api/locations",
+        success: function(locations) {
+          console.log("succes");
+          
+          var latLng = new google.maps.LatLng(56.1572, 10.2107);
+          addMarker(latLng);
+        },
+        error: function(error) {
+          console.log('we have gotten an error');
+          console.log(error);
+        }
+        });
+         
+
+        });
+        
+       
+      }
+      
+      
+      
+      //console.log(locs);
+
+      function addMarker(location) {
+
+              var marker = new google.maps.Marker({
+                position: location,
+                map: map
+                //title: 'Hello World!'
+              });
+              markers.push(marker);
+            }
+
+     google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+      /*
+      TheObject = {
+          getArray: function(callback) { 
+              $.ajax({
+                    cache: true,
+                    type: "GET",
+                    dataType: "json",
+                    url: "/api/locations",
+                    success: function (locations){ 
+                        callback.call(this,data);
+                    }
+               });
+           }
+      }
+
+      TheObject.getArray(function(locations) {
+          
+          
+          lc = locations['locations']
+          locs = []
+          for (var i lc.length - 1; i >= 0; i--) {
+            ll = lc[i];
+            loc = [ll['title'], ll['description'], ll['lat'], ll['lng']]);
+            locs.append(loc)
+          }; 
+          console.log([1,2,3]);    
+      });
+      console.log(TheObject.getArray)
+
+      */
+
+
+      
+
+
+    </script>
+  <loc></loc>
+  </head>
+  <body>
+  <span id="whatever">duomenys</span>
+  <input type="text" id="hah">
+
+<div id="map-canvas"></div>
+  </body>
+</html>
+
+
