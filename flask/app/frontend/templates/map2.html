@@ -35,38 +35,35 @@
           addTempMarker(event.latLng);
         });
 
+        // FIXME: ids of the buttons should be more descriptive
         $('#a').click(function(){
           createLocation(true);
         });
 
+        // FIXME: ids of the buttons should be more descriptive
         $('#b').click(function(){
           createLocation(false);
         });
-
-  
       }
       
-
-
-
      
       $.ajax({
-        dataType: "json",
-        url: "/api/locations",
-        success: function(locations) {
-          console.log("succes");
-          var locs = locations["locations"];
-          for (var i = locs.length - 1; i >= 0; i--) {
-            var latLng = new google.maps.LatLng(locs[i]["lat"], locs[i]["lng"]);
-            var title = locs[i]["title"];
-            var description = locs[i]["description"];
-            addMarker(latLng,title, description);
-          };
-        },
-        error: function(error) {
-          console.log('we have gotten an error');
-          console.log(error);
-        }
+          dataType: "json",
+          url: "/api/locations",
+          success: function(locations) {
+            console.log("succes");
+            var locs = locations["locations"];
+            for (var i = locs.length - 1; i >= 0; i--) {
+              var latLng = new google.maps.LatLng(locs[i]["lat"], locs[i]["lng"]);
+              var title = locs[i]["title"];
+              var description = locs[i]["description"];
+              addMarker(latLng,title, description);
+            }
+          },
+          error: function(error) {
+            console.log('we have gotten an error');
+            console.log(error);
+          }
         });
  
       // Add a marker to the map and push to the array.
@@ -78,6 +75,7 @@
           title: title + "(" + description + ")"
         });
         
+        // FIXME: should simplify this
         if (markers.length == 0) {
           markers.push(marker);
         } else if (markers[markers.length - 1]["title"] === "undefined(undefined)" ) {
@@ -91,6 +89,7 @@
       };
       
 
+      // FIXME: how is this different from "addMarker"? I can only see that the icon is different- we should merge the 2 methods
       // Add a new, draggable marker to the map and push to the array.
       function addTempMarker(location, title, description) {
         var marker = new google.maps.Marker({
@@ -113,6 +112,7 @@
         console.log(markers);
       };
 
+      // FIXME: unused
       // Add a marker to the map and push to the array.
       function pullMarker(locations) {
         for (var i=0; i<locations.length; i++) {
