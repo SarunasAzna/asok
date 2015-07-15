@@ -19,6 +19,9 @@
       // The user can then click an option to hide, show or delete the markers.
       var map;
       var markers = [];
+      var tempMarkers = [1];
+      var localMarkers = [];
+      var tempMarker = 1;
 
       function initialize() {
         var center = new google.maps.LatLng(56.1572, 10.2107);
@@ -32,19 +35,31 @@
 
         // This event listener will call addMarker() when the map is clicked.
         google.maps.event.addListener(map, 'click', function(event) {
-          addMarker(event.latLng, "new", "", true );
+          var tempLat = event.latLng["A"];
+          var tempLng = event.latLng["F"]
+          document.getElementById("title").value = "undefined";
+          document.getElementById("description").value = "undefined";
+          document.getElementById("lat").value = tempLat;
+          document.getElementById("lng").value = tempLng;
+          document.getElementById("mySelect").value = "0";
+          addMarker(event.latLng, "new", "", -1, true );
         });
 
         // FIXME(FIXED): ids of the buttons should be more descriptive
         //
         $('#postLoc').click(function(){
-          createLocation(true);
+          createLocation(true, false, false);
         });
-
         // FIXME(FIXED): ids of the buttons should be more descriptive
         //
         $('#createLoc').click(function(){
-          createLocation(false);
+          createLocation(false, false, false);
+        });
+        $('#editLoc').click(function(){
+          createLocation(true, true, false);
+        });
+        $('#delLoc').click(function(){
+          createLocation(true, true, true);
         });
       }
       
@@ -53,13 +68,15 @@
           dataType: "json",
           url: "/api/locations",
           success: function(locations) {
-            console.log("succes");
             var locs = locations["locations"];
             for (var i = locs.length - 1; i >= 0; i--) {
               var latLng = new google.maps.LatLng(locs[i]["lat"], locs[i]["lng"]);
               var title = locs[i]["title"];
               var description = locs[i]["description"];
-              addMarker(latLng,title, description, false);
+              var id = locs[i]["id"];
+              addOption(title, id);
+              addMarker(latLng,title, description, id, false);
+             
             }
           },
           error: function(error) {
@@ -69,73 +86,95 @@
         });
  
       // Add a marker to the map and push to the array.
-      function addMarker(location, title, description, temp) {
+      function addMarker(location, title, description, id, temp) {
         if (temp == false) {
         	var icon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
         	var draggable = false;
         } else {
         	var icon = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-        	var draggable = true;
+        	// Temporaly changed tu false, can't guide dragged coordinates to HTML inputs.
+          var draggable = false;
         };
         var marker = new google.maps.Marker({
           position: location,
           map: map,
           icon: icon,
           draggable: draggable,
+          zIndex: id,
           title: title + "(" + description + ")"
         });
-        
+        /*
         // FIXME(I can't fix this): should simplify this
         if (markers.length == 0) {
           markers.push(marker);
         } else if (markers[markers.length - 1]["title"] === "new()" ) {
           markers[markers.length - 1].setMap(null);
-          markers[markers.length - 1] = marker;
+          delete markers[markers.length-1]
+          markers.push(marker);
         } else {
           markers.push(marker);
-        }
-        setAllMap(map);
-        console.log(markers);
+          console.log(markers)
+        } */
+        
+        if (id > 0) {
+          markers.push(marker);
+        } else if (id == -1) {
+          //console.log(tempMarkers);
+          //tempMarkers = deleteMarkers(null, tempMarkers);
+          //if (tempMarkers.lenght > 1){
+            //tempMarkers[tempMarkers.lenght-1].setMap(null);
+          //};
+          //tempMarkers.push(marker);
+          //console.log(tempMarkers[tempMarkers.length-1]);
+          //tempMarkers[tempMarkers.length-1].setMap(null);
+          //tempMarker.setMap(null);
+          //tempMarkers[0].setMap(null);
+          //tempMarkers.push(marker);
+          //
+          // setMap is working unpredictably 
+          //
+        } else{
+          localMarkers.push(marker);
+        };
+        //console.log(markers);
+        
       };
       
-
-      // Sets the map on all markers in the array.
-      function setAllMap(map) {
-        for (var i = 0; i < markers.length; i++) {
-          markers[i].setMap(map);
-        }
-      };
-
-      
-      
-
-      function createLocation(shouldSave) {
-        var pos = markers[markers.length-1]["position"];
-        var lat = pos["A"];
-        var lng = pos["F"];
-        var latLng = new google.maps.LatLng(lat, lng);
+      function createLocation(shouldSave, shouldEdit, shouldDelete) {
         var title = document.getElementById("title").value;
         var description = document.getElementById("description").value;
-        if (title != "undefined") {
-          addMarker(latLng, title, description, false);
-        } else {
-          alert("Title is undefined");
-        };
-        
+        var lat = parseFloat(document.getElementById("lat").value);
+        var lng = parseFloat(document.getElementById("lng").value);
+        var latLng = new google.maps.LatLng(lat, lng);
         if (shouldSave) {
-          post(lat, lng, title, description);
-        }
+          if (shouldEdit){
+            var id = parseInt(document.getElementById("mySelect").value);
+            //var id = 8;
+            console.log(id);
+          } else {
+            var id = generateId(markers);
+            addOption(title, id);
+          };
+          post(lat, lng, title, description, id, shouldDelete);
+          
+        } else {
+          var id = 0
+        };
+      
+        addMarker(latLng, title, description, id, false);
+       
       };
 
-      function post(lat, lng, title, description) {
+      function post(lat, lng, title, description, id, del) {
        var data = {
+            'id': id,
             'title': title,
             'description': description,
             'lat': lat,
-            'lng': lng
+            'lng': lng,
+            'delete': del
         
        }; 
-        console.log(data);
         $.ajax({
           type: "POST",
           url: "/api/locations",
@@ -149,16 +188,65 @@
         });
       };
 
+      function addOption(place, id) {
+        var x = document.getElementById("mySelect");
+        var option = document.createElement("option");
+        option.text = place;
+        option.value = id;
+        x.add(option);
+
+      };
+
+
+      function generateId(markers) {
+        var ids = []
+        for (var i = markers.length - 1; i >= 0; i--) {
+          ids.push(markers[i]["zIndex"]);
+        };
+        var max = Math.max(...ids)
+        return max + 1
+      };
+      
+      function showParams(markers) {
+        var id = parseInt(document.getElementById("mySelect").value);
+        console.log(markers);
+        for (var i = markers.length - 1; i >= 0; i--) {
+          if (markers[i]["zIndex"] == id) {
+            var mark = markers[i];
+            console.log(mark);
+          };
+        };
+        var longTitle = mark["title"].split("(");
+        var title = longTitle[0];
+        var description = longTitle[1].split(")")[0];
+        document.getElementById("title").value = title;
+        document.getElementById("description").value = description;
+        document.getElementById("lat").value = mark["position"]["A"];
+        document.getElementById("lng").value = mark["position"]["F"];
+      };
+      
+
+
       google.maps.event.addDomListener(window, 'load', initialize);
+      
+
+
 
     </script>
   </head>
   <body>
     <div id="panel">
-      Title: <input type="text" id="title" value="undefined">
-      Description: <input type="text" id="description" value="undefined">
+      Title: <input type="text" id="title" value="Gulf of Guinea">
+      Description: <input type="text" id="description" value="Cardinal directions center">
+      Latitude: <input type="number" id="lat" min="-90" max="90" step="any" value="0">
+      Longitude: <input type="number" id="lng"  min="-180" max="180" step="any" value="0">
       <button  id="createLoc">Create location</button>
-      <button  id="postLoc">Post to server</button>
+      <button  id="postLoc">Post location</button>
+      <button  id="editLoc">Edit location</button>
+      <button  id="delLoc">Delete location</button>
+      <select id="mySelect" onChange="showParams(markers)" > 
+      <option value="0">--</option>
+      </select>
     </div>
     <div id="map-canvas"></div>
     <p>Click on the map to add markers.</p>
