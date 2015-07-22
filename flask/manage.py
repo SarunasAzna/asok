@@ -37,11 +37,11 @@ def create_database():
             # Create table
             c.execute('''CREATE TABLE locations
                     (id INTEGER PRIMARY KEY, title TEXT, description TEXT,  lat TEXT, lng TEXT)''')
-            locations = [(1, 'Vilnius', 'Capital of Lithuania', 54.6833, 25.2833),
-                     (2, 'Aarhus', 'Second largest city in Denmark', 56.1572, 10.2107),
-                     (3, 'Hell', 'Norwegian hell', 63.4444, 10.9225),
-                     (4, 'Fucking', 'Fucking, Austria', 48.0672, 12.8636)]
-            c.executemany('INSERT INTO locations VALUES (?,?,?,?,?)', locations) 
+            locations = [('Vilnius', 'Capital of Lithuania', 54.6833, 25.2833),
+                     ( 'Aarhus', 'Second largest city in Denmark', 56.1572, 10.2107),
+                     ( 'Hell', 'Norwegian hell', 63.4444, 10.9225),
+                     ( 'Fucking', 'Fucking, Austria', 48.0672, 12.8636)]
+            c.executemany('INSERT INTO locations (title, description, lat, lng) VALUES (?,?,?,?)', locations) 
             conn.commit()
 
 

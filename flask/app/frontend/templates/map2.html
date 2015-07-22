@@ -19,7 +19,7 @@
       // The user can then click an option to hide, show or delete the markers.
       var map;
       var markers = [];
-      var tempMarkers = [1];
+      var tempMarkers = [];
       var localMarkers = [];
       var tempMarker = 1;
 
@@ -56,10 +56,10 @@
           createLocation(false, false, false);
         });
         $('#editLoc').click(function(){
-          createLocation(true, true, false);
+          updateLocation();
         });
         $('#delLoc').click(function(){
-          createLocation(true, true, true);
+          deleteLocation();
         });
       }
       
@@ -75,8 +75,7 @@
               var description = locs[i]["description"];
               var id = locs[i]["id"];
               addOption(title, id);
-              addMarker(latLng,title, description, id, false);
-             
+              addMarker(latLng,title, description, id, false);      
             }
           },
           error: function(error) {
@@ -115,31 +114,58 @@
           markers.push(marker);
           console.log(markers)
         } */
-        
         if (id > 0) {
           markers.push(marker);
         } else if (id == -1) {
-          //console.log(tempMarkers);
-          //tempMarkers = deleteMarkers(null, tempMarkers);
-          //if (tempMarkers.lenght > 1){
-            //tempMarkers[tempMarkers.lenght-1].setMap(null);
-          //};
-          //tempMarkers.push(marker);
-          //console.log(tempMarkers[tempMarkers.length-1]);
-          //tempMarkers[tempMarkers.length-1].setMap(null);
-          //tempMarker.setMap(null);
-          //tempMarkers[0].setMap(null);
-          //tempMarkers.push(marker);
-          //
-          // setMap is working unpredictably 
-          //
+          if (tempMarkers.length > 0){
+            tempMarkers[tempMarkers.length-1].setMap(null);
+          }
+          tempMarkers.push(marker);
         } else{
           localMarkers.push(marker);
-        };
+        }
         //console.log(markers);
         
-      };
+      }
+
+      function deleteMarker(id) {
+        for (x in markers) {
+          object = markers[x];
+          if (object["zIndex"] == id) {
+            object.setMap(null);
+          }
+        }
+      }
       
+      
+      function deleteLocation() {
+        var selection = document.getElementById("mySelect");
+        var id = parseInt(selection.value);
+        del(id); 
+        deleteMarker(id);
+        if (selection.value != "0" ) {
+            selection.remove(selection.selectedIndex);
+          };      
+      }
+
+      function updateLocation() {
+        var title = document.getElementById("title").value;
+        var description = document.getElementById("description").value;
+        var lat = parseFloat(document.getElementById("lat").value);
+        var lng = parseFloat(document.getElementById("lng").value);
+        var latLng = new google.maps.LatLng(lat, lng);
+        var selection = document.getElementById("mySelect");
+        var id = parseInt(selection.value);
+        put(lat, lng, title, description, id, false); 
+        deleteMarker(id);      
+        addMarker(latLng, title, description, id, false);
+        if (selection.value != "0" ) {
+            selection.remove(selection.selectedIndex);
+            addOption(title,id);
+          };
+      }
+
+
       function createLocation(shouldSave, shouldEdit, shouldDelete) {
         var title = document.getElementById("title").value;
         var description = document.getElementById("description").value;
@@ -147,23 +173,23 @@
         var lng = parseFloat(document.getElementById("lng").value);
         var latLng = new google.maps.LatLng(lat, lng);
         if (shouldSave) {
+          var selection = document.getElementById("mySelect");
           if (shouldEdit){
-            var id = parseInt(document.getElementById("mySelect").value);
-            //var id = 8;
-            console.log(id);
+            var id = parseInt(selection.value);
           } else {
             var id = generateId(markers);
             addOption(title, id);
           };
           post(lat, lng, title, description, id, shouldDelete);
-          
+          if (shouldDelete && selection.value != "0" ) {
+            selection.remove(selection.selectedIndex);
+          };
         } else {
           var id = 0
         };
-      
         addMarker(latLng, title, description, id, false);
        
-      };
+      }
 
       function post(lat, lng, title, description, id, del) {
        var data = {
@@ -173,8 +199,7 @@
             'lat': lat,
             'lng': lng,
             'delete': del
-        
-       }; 
+       } 
         $.ajax({
           type: "POST",
           url: "/api/locations",
@@ -186,7 +211,45 @@
             console.log(result);
             }
         });
-      };
+      }
+
+      function put(lat, lng, title, description, id, del) {
+       var data = {
+            'id': id,
+            'title': title,
+            'description': description,
+            'lat': lat,
+            'lng': lng,
+            'delete': del
+        
+       } 
+       var url = "/api/locations/" + id;
+        $.ajax({
+          type: "PUT",
+          url: url,
+          contentType:"application/json; charset=utf-8",
+          data: JSON.stringify(data),
+          dataType: "json",
+          success: function(result) {
+            console.log("success callback");
+            console.log(result);
+            }
+        });
+      }
+
+      
+      function del(id) {
+       var url = "/api/locations/" + id;
+        $.ajax({
+          type: "DELETE",
+          url: url,
+          contentType:"application/json; charset=utf-8",
+          success: function(result) {
+            console.log("success callback");
+            console.log(result);
+            }
+        });
+      }
 
       function addOption(place, id) {
         var x = document.getElementById("mySelect");
@@ -194,8 +257,7 @@
         option.text = place;
         option.value = id;
         x.add(option);
-
-      };
+      }
 
 
       function generateId(markers) {
@@ -205,7 +267,7 @@
         };
         var max = Math.max(...ids)
         return max + 1
-      };
+      }
       
       function showParams(markers) {
         var id = parseInt(document.getElementById("mySelect").value);
@@ -214,8 +276,8 @@
           if (markers[i]["zIndex"] == id) {
             var mark = markers[i];
             console.log(mark);
-          };
-        };
+          }
+        }
         var longTitle = mark["title"].split("(");
         var title = longTitle[0];
         var description = longTitle[1].split(")")[0];
@@ -223,7 +285,7 @@
         document.getElementById("description").value = description;
         document.getElementById("lat").value = mark["position"]["A"];
         document.getElementById("lng").value = mark["position"]["F"];
-      };
+      }
       
 
 
