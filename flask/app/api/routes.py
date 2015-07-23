@@ -30,6 +30,10 @@ def locations():
 @api.route('/locations/<location_id>', methods=['GET', 'PUT', 'DELETE'])
 def location(location_id):
     """Fuction editing locations"""
+
+    # ^^^^^ FIXME: the docstring above is misleading. This function isn't only
+    # for editing.
+
     if request.method == 'GET':
         loc = read_location(location_id)
         return jsonify(location=loc)
@@ -45,7 +49,7 @@ def location(location_id):
 
 def read_location(location_id):
     """Function for reading one location info."""
-    loc = "No location with id: %s" %(location_id)
+    loc = "No location with id: %s" % (location_id)
     with sqlite3.connect('./app/api/locations/locations.db') as conn:
         curs = conn.cursor()
         try:
@@ -62,20 +66,20 @@ def read_location(location_id):
         except:
             loc = 'except is working'
     return loc
-    
+
 
 def read_database(location_id=False):
     """Function for sqlite database reading."""
     # FIXME(FIXED): we are reading from the database- there's nothing to save
     # Save (commit) the changes
     #
-    #conn.commit()
+    # conn.commit()
     # FIXME(FIXED): could try using "with" statement to automatically close
     # the connection. E.g.
     # with sqlite.connect('...') as conn:
     #    pass
     # Fixed
-    #conn.close()
+    # conn.close()
     with sqlite3.connect('./app/api/locations/locations.db') as conn:
         curs = conn.cursor()
         locs = []
@@ -89,16 +93,21 @@ def read_database(location_id=False):
             locs.append(loc)
     return locs
 
+
 def insert_database(location, delete=False):
     """Function for sqlite database updates."""
     with sqlite3.connect('./app/api/locations/locations.db') as conn:
         curs = conn.cursor()
+
+        # FIXME: correct, but you should use "if not delete"
         if delete == False:
             locs = (location['id'],
                     location['title'],
                     location['description'],
                     location['lat'],
                     location['lng'])
+            # FIXME: try/except construct should be
+            # used to catch genuine errors rather than for flow control.
             try:
                 # FIXME(FIXED): executemany? We're only inserting a
                 # single location
@@ -111,11 +120,14 @@ def insert_database(location, delete=False):
                         lat = ?, lng = ? WHERE id = ? ''',
                     (locs[1], locs[2], locs[3], locs[4], locs[0]))
         else:
+            # FIXME: Is this every used? Why do we have "delete_location" then?
             curs.execute(
                 '''DELETE FROM locations WHERE id = ? ''',
                 (location["id"],))
+
             # Save (commit) the changes
             conn.commit()
+
 
 def delete_location(location_id):
     """Function for deleting location by id."""
